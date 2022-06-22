@@ -3,6 +3,9 @@
 - [qb-target](https://github.com/BerkieBb/qb-target)
 - [keep-menu](https://github.com/swkeep/keep-menu)
 
+# Preview 
+- [video](https://youtu.be/1MbqnIDTAO0)
+
 ## Installation
 
 ## Step 0:
