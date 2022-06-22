@@ -8,11 +8,20 @@
 ## Step 0:
 
 - import sql.sql in your database
+- make sure keep-menu is already installed
+- ensure keep-paycheck after qb-core and keep-menu
+- make sure scirpt's name is correct (keep-paycheck)
+```
+ensure qb-core
+...
+ensure keep-menu
+...
+ensure keep-paycheck
+```
+## Step 1 (Redirect qb-core's paychecks to scirpt):
 
-## Step 1:
-
-- change code in qb-core/server/functions.lua PaycheckInterval() to
-
+- edit qb-core/server/functions.lua (make sure you already have a backup of this file)
+- replace code at PaycheckInterval() to
 ```lua
 function PaycheckInterval()
     if next(QBCore.Players) then
@@ -43,4 +52,18 @@ function PaycheckInterval()
     end
     SetTimeout(QBCore.Config.Money.PayCheckTimeOut * (60 * 1000), PaycheckInterval)
 end
+```
+
+## Redirect external scirpts payment method to keep-paycheck
+- to redirect their payments first find all AddMoney functions that resposible for payments.
+```lua
+Player.Functions.AddMoney('cash/bank', amount) 
+```
+- then replace them with keep-paycheck payment event
+```lua
+local payment = money -- how much money player should recive in their accounts
+local citizenid = Player.PlayerData.citizenid
+local from = Player.PlayerData.job.name -- job name / shown as 'from' in transaction history
+
+TriggerEvent('keep-paycheck:server:AddMoneyToPayCheck', citizenid, payment , from)
 ```
