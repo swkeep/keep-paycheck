@@ -66,15 +66,17 @@ local function makeCore()
      if loaded then return end
      Citizen.CreateThread(function()
           local coord = Config.intraction.npc.coords
+          local vec3_coord = vector3(coord.x, coord.y, coord.z)
           PED = spawn_ped(Config.intraction.npc)
 
-          exports['qb-target']:AddBoxZone("keep_paycheck", coord, Config.intraction.box.l, Config.intraction.box.w, {
-               name = "keep_paycheck",
-               heading = Config.intraction.box.heading,
-               debugPoly = false,
-               minZ = coord.z + Config.intraction.box.minz_offset,
-               maxZ = coord.z + Config.intraction.box.maxz_offset,
-          }, {
+          exports['qb-target']:AddBoxZone("keep_paycheck", vec3_coord, Config.intraction.box.l, Config.intraction.box.w,
+               {
+                    name = "keep_paycheck",
+                    heading = Config.intraction.box.heading,
+                    debugPoly = false,
+                    minZ = coord.z + Config.intraction.box.minz_offset,
+                    maxZ = coord.z + Config.intraction.box.maxz_offset,
+               }, {
                options = {
                     {
                          event = "keep-paycheck:menu:Open_menu",

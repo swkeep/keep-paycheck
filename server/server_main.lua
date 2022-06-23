@@ -1,7 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local function logger(citizenid, state, amount, metadata)
-     local query = 'INSERT INTO keeppaycheck_logs (citizenid, state, amount, metadata) VALUES (:citizenid, :state, :amount, :metadata)'
+     local query = 'INSERT INTO keepPayCheck_logs (citizenid, state, amount, metadata) VALUES (:citizenid, :state, :amount, :metadata)'
      local data = {
           ['citizenid'] = citizenid,
           ['state'] = state,
@@ -155,7 +155,7 @@ QBCore.Functions.CreateCallback('keep-paycheck:server:get_logs', function(source
      limit = limit or 10 --placeholder
      local Player = QBCore.Functions.GetPlayer(source)
      local citizenid = Player.PlayerData.citizenid
-     local query = 'SELECT state, amount, metadata,created FROM keeppaycheck_logs WHERE citizenid = ? order by created desc limit 15'
+     local query = 'SELECT state, amount, metadata,created FROM keepPayCheck_logs WHERE citizenid = ? order by created desc limit 15'
      local LOGS = MySQL.Sync.fetchAll(query, { citizenid })
      cb(LOGS)
 end)
