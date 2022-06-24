@@ -1,5 +1,7 @@
 Config = Config or {}
 
+Config.menu = 'keep-menu' -- keep-menu / qb-menu
+
 Config.intraction = {
      npc = {
           model = 'MP_F_ExecPA_01',

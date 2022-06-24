@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `keepPayCheck_account` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `citizenid` varchar(50) DEFAULT NULL,
+  `citizenid` varchar(50) NOT NULL,
   `money` BIGINT DEFAULT 0,
   PRIMARY KEY (`citizenid`),
   KEY `id` (`id`)

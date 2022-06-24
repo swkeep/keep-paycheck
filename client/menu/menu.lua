@@ -3,11 +3,15 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 --   Variable
-local PlayerJob = nil
 local menu = {}
+local QbMenu = {}
 ------------------
 local function Open_menu(data)
-     menu:withdraw_menu(data)
+     if Config.menu == 'keep-menu' then
+          menu:withdraw_menu(data)
+          return
+     end
+     QbMenu:withdraw_menu(data)
 end
 
 AddEventHandler('keep-paycheck:menu:Open_menu', function()
@@ -96,6 +100,10 @@ local function withdraw_amount(maximum)
           end, inputData.amount)
      end
 end
+
+------------------
+--   keep-menu
+------------------
 
 function menu:withdraw_menu(data)
      if data == nil then return end
@@ -220,3 +228,151 @@ function menu:logs_menu(data)
      exports['keep-menu']:createMenu(Menu)
      TriggerEvent('animations:client:EmoteCommandStart', { "c" })
 end
+
+------------------
+--   qb-menu
+------------------
+
+function QbMenu:withdraw_menu(data)
+     if data == nil then return end
+     Speach('hi')
+     TriggerEvent('animations:client:EmoteCommandStart', { "wait10" })
+     local money = string.format(Lang:t('menu.withdraw_menu.money_string'), format_int(data.money))
+     local Menu = {
+          {
+               header = Lang:t('menu.withdraw_menu.header'),
+               icon = 'fa-solid fa-credit-card',
+               disabled = true
+          },
+          {
+               header = Lang:t('menu.withdraw_menu.account_Information'),
+               txt = money,
+               icon = 'fa-solid fa-hand-holding-dollar',
+          },
+          {
+               header = Lang:t('menu.withdraw_menu.withdraw_all'),
+               icon = 'fa-solid fa-money-bill-transfer',
+               params = {
+                    event = 'keep-paycheck:client:function_caller',
+                    args = { id = 1, money = data.money },
+               }
+          },
+          {
+               header = Lang:t('menu.withdraw_menu.withdraw_amount'),
+               icon = 'fa-solid fa-arrow-up-wide-short',
+               params = {
+                    event = 'keep-paycheck:client:function_caller',
+                    args = { id = 2, money = data.money },
+               }
+          },
+          {
+               header = Lang:t('menu.withdraw_menu.transaction_history'),
+               icon = 'fa-solid fa-clock-rotate-left',
+               params = {
+                    event = 'keep-paycheck:client:function_caller',
+                    args = { id = 3, money = data.money },
+               }
+          },
+          {
+               header = Lang:t('menu.leave'),
+               icon = 'fa-solid fa-circle-xmark',
+               params = {
+                    event = "keep-paycheck:client:close_menu",
+               }
+          }
+     }
+
+     exports['qb-menu']:openMenu(Menu)
+
+end
+
+AddEventHandler('keep-paycheck:client:function_caller', function(data)
+     TriggerEvent('animations:client:EmoteCommandStart', { "c" })
+     if data.id == 1 then
+          -- Withdraw All
+          withdraw_all(data.money)
+          return
+     elseif data.id == 2 then
+          -- Withdraw Amount
+          withdraw_amount(data.money)
+          return
+     elseif data.id == 3 then
+          QBCore.Functions.TriggerCallback('keep-paycheck:server:get_logs', function(result)
+               QbMenu:logs_menu(result)
+          end)
+          return
+     end
+end)
+
+function QbMenu:logs_menu(data)
+     if data == nil then return end
+     Speach('whatever')
+     TriggerEvent('animations:client:EmoteCommandStart', { "notepad" })
+     local Menu = {
+          {
+               header = Lang:t('menu.logs_menu.paycheck_logs'),
+               icon = 'fa-solid fa-list',
+               disabled = true
+          },
+          {
+               header = Lang:t('menu.leave'),
+               icon = 'fa-solid fa-circle-xmark',
+               params = {
+                    event = "keep-paycheck:client:close_menu",
+               }
+          }
+     }
+
+     for key, transaction in pairs(data) do
+          local icon = ''
+          local header = ''
+          local metadata = json.decode(transaction.metadata)
+          local subheader = Lang:t('menu.logs_menu.before')
+          local footer = Lang:t('menu.logs_menu.after')
+          subheader = string.format(subheader, format_int(metadata.account.old_value))
+          footer = string.format(footer, format_int(metadata.account.current_value))
+
+          if transaction.state == true then
+               header = string.format(Lang:t('menu.logs_menu.recived'), format_int(transaction.amount))
+               if metadata.desc.source then
+                    if metadata.desc.source.name then
+                         header = header .. Lang:t('menu.logs_menu.to') .. (metadata.desc.source.name or "")
+                    end
+                    if metadata.desc.source.job then
+                         header = header .. Lang:t('menu.logs_menu.from') .. (metadata.desc.source.job or "")
+                    end
+               end
+               icon = "fa-solid fa-arrow-right-to-bracket"
+
+          else
+               header = string.format(Lang:t('menu.logs_menu.withdraw'), format_int(transaction.amount))
+               if metadata.desc.source then
+                    if metadata.desc.source.name then
+                         header = header .. Lang:t('menu.logs_menu.to') .. (metadata.desc.source.name or "")
+                    end
+                    if metadata.desc.source.job then
+                         header = header .. Lang:t('menu.logs_menu.from') .. (metadata.desc.source.job or "")
+                    end
+               end
+               icon = "fa-solid fa-arrow-right-from-bracket"
+          end
+
+          Menu[#Menu + 1] = {
+               header = header,
+               txt = subheader .. ' | ' .. footer,
+               icon = icon
+          }
+     end
+     exports['qb-menu']:openMenu(Menu)
+end
+
+AddEventHandler('keep-paycheck:client:close_menu', function()
+     TriggerEvent('qb-menu:closeMenu')
+end)
+
+AddEventHandler('qb-menu:closeMenu', function()
+     if not GetCurrentResourceName() == 'keep-paycheck' then
+          return
+     end
+     TriggerEvent('animations:client:EmoteCommandStart', { "c" })
+end)

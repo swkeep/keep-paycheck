@@ -1,12 +1,17 @@
 # Dependencies
 
 - [qb-target](https://github.com/BerkieBb/qb-target)
-- [keep-menu](https://github.com/swkeep/keep-menu)
+- [keep-menu](https://github.com/swkeep/keep-menu) -- recommended menu
+- it supports 'qb-menu' too
 
-# Preview 
+# Preview
+
 - [video](https://youtu.be/1MbqnIDTAO0)
 
 ## Installation
+
+- if you are using qb-menu and don't want to use keep-menu :(
+- set Confing.menu to 'qb-menu'
 
 ## Step 0:
 
@@ -14,6 +19,7 @@
 - make sure keep-menu is already installed
 - ensure keep-paycheck after qb-core and keep-menu
 - make sure scirpt's name is correct (keep-paycheck)
+
 ```
 ensure qb-core
 ...
@@ -21,10 +27,12 @@ ensure keep-menu
 ...
 ensure keep-paycheck
 ```
+
 ## Step 1 (Redirect qb-core's paychecks to scirpt):
 
 - edit qb-core/server/functions.lua (make sure you already have a backup of this file)
 - replace code at PaycheckInterval() to
+
 ```lua
 function PaycheckInterval()
     if next(QBCore.Players) then
@@ -58,11 +66,15 @@ end
 ```
 
 ## Redirect external scirpts payment method to keep-paycheck
+
 - to redirect their payments first find all AddMoney functions that resposible for payments.
+
 ```lua
-Player.Functions.AddMoney('cash/bank', amount) 
+Player.Functions.AddMoney('cash/bank', amount)
 ```
+
 - then replace them with keep-paycheck payment event
+
 ```lua
 local payment = money -- how much money player should recive in their accounts
 local citizenid = Player.PlayerData.citizenid
