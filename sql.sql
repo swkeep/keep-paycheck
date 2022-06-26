@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS `keepPayCheck_account` (
 
 CREATE TABLE IF NOT EXISTS `keepPayCheck_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `citizenid` varchar(50) DEFAULT NULL,
+  `citizenid` varchar(50) NOT NULL,
   `state` BOOLEAN DEFAULT 0,
   `amount` INT DEFAULT 0,
-  `metadata` TEXT NOT NULL DEFAULT '',
+  `metadata` TEXT NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `citizenid` (`citizenid`)
