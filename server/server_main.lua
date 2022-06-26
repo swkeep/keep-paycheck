@@ -74,8 +74,14 @@ local function addmoney_to_paycheck(citizenid, amount, job)
      if not (amount >= 0 and amount <= math.maxinteger) then return end
 
      MySQL.Async.fetchAll('SELECT * FROM keepPayCheck_account WHERE citizenid = ?', { citizenid }, function(res)
+          local m = 0
           if not next(res) then
                init_account(citizenid, amount)
+               if not res[1] then
+                    m = 0
+               else
+                    m = res[1].money
+               end
                logger(citizenid, 1, amount, {
                     desc = {
                          type = 'from',
@@ -84,7 +90,7 @@ local function addmoney_to_paycheck(citizenid, amount, job)
                          }
                     },
                     account = {
-                         old_value = res[1].money,
+                         old_value = m,
                          current_value = amount
                     }
                })
