@@ -1,5 +1,10 @@
 Config = Config or {}
 
+Config.simple_paycheck = false
+Config.menu = 'qb-menu'            -- qb-menu / keep-menu / ox_lib
+Config.input = 'qb-input'          -- qb-input / ox_lib
+Config.target_system = "qb-target" -- qb-target / ox_target
+
 local preset = {
      NPC_1 = {
           model = 'MP_F_ExecPA_01',
@@ -37,14 +42,12 @@ local preset = {
                'tired_01_left_amy_skater_01',
                'tired_01_right_amy_skater_01',
           },
-          -- flag = 1,
-          -- freeze = true,
-          -- invincible = true,
-          -- blockevents = true,
+          flag = 1,
+          freeze = true,
+          invincible = true,
+          blockevents = true,
      }
 }
-
-Config.simple_paycheck = false
 
 Config.interaction = {
      spawn_distance = 50.0,

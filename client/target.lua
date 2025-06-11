@@ -1,9 +1,7 @@
 local active_npcs = {}
 local active_npc
 
-function GetActiveNpc()
-     return active_npc
-end
+function GetActiveNpc() return active_npc end
 
 local function set_ped_variation(ped, variation)
      for component_id, var_data in pairs(variation) do
@@ -75,15 +73,49 @@ end
 
 local function register_npc_zone(npc_id, npc_data)
      local box = npc_data.box
-     if not box then
-          return
-     end
+     if not box then return end
 
-     local options = {}
      local zone_name = "npc_zone_" .. npc_id
+     local options = {}
 
-     if Config.simple_paycheck == false then
-          options[#options + 1] = {
+     if Config.simple_paycheck then
+          local simple_options = {
+               {
+                    label = Lang:t('menu.withdraw_menu.withdraw_all'),
+                    icon = 'fa-solid fa-money-bill-transfer',
+                    event = 'keep-paycheck:server:withdraw_all'
+               },
+               {
+                    label = "Transaction History",
+                    icon = 'fa-solid fa-clock-rotate-left',
+                    event = 'keep-paycheck:server:get_logs'
+               }
+          }
+
+          for _, opt in ipairs(simple_options) do
+               options[#options + 1] = Config.target_system == 'ox_target' and {
+                    name = zone_name .. '_' .. opt.label:gsub(' ', '_'):lower(),
+                    label = opt.label,
+                    icon = opt.icon,
+                    onSelect = function() TriggerServerEvent(opt.event) end,
+                    distance = 2.0
+               } or {
+                    label = opt.label,
+                    icon = opt.icon,
+                    action = function() TriggerServerEvent(opt.event) end
+               }
+          end
+     else
+          options[1] = Config.target_system == 'ox_target' and {
+               name = zone_name,
+               label = Lang:t('menu.qb_target_label'),
+               icon = "fa-solid fa-credit-card",
+               onSelect = function()
+                    active_npc = active_npcs[npc_id]
+                    TriggerEvent("keep-paycheck:menu:open_menu", npc_id)
+               end,
+               distance = 2.0
+          } or {
                icon = "fa-solid fa-credit-card",
                label = Lang:t('menu.qb_target_label'),
                action = function()
@@ -91,50 +123,39 @@ local function register_npc_zone(npc_id, npc_data)
                     TriggerEvent("keep-paycheck:menu:open_menu", npc_id)
                end
           }
-     else
-          options[#options + 1] = {
-               label = Lang:t('menu.withdraw_menu.withdraw_all'),
-               icon = 'fa-solid fa-money-bill-transfer',
-               action = function()
-                    TriggerEvent('animations:client:EmoteCommandStart', { "c" })
-                    TriggerServerEvent("keep-paycheck:server:withdraw_all")
-               end
-          }
-
-          options[#options + 1] = {
-               label = "Transaction History",
-               icon = 'fa-solid fa-clock-rotate-left',
-               action = function()
-                    TriggerEvent('animations:client:EmoteCommandStart', { "c" })
-                    TriggerServerEvent("keep-paycheck:server:get_logs")
-               end
-          }
      end
 
-     exports['qb-target']:AddBoxZone(
-          zone_name,
-          npc_data.coords,
-          box.l,
-          box.w,
-          {
-               name = zone_name,
-               heading = box.heading,
-               debugPoly = false,
-               minZ = npc_data.coords.z + box.minz_offset,
-               maxZ = npc_data.coords.z + box.maxz_offset,
-          },
-          {
-               options = options,
-               distance = 2.0,
-          }
-     )
+     if Config.target_system == 'ox_target' then
+          exports.ox_target:addBoxZone({
+               coords = npc_data.coords,
+               size = vec3(box.l, box.w, box.maxz_offset - box.minz_offset),
+               rotation = box.heading,
+               debug = false,
+               options = options
+          })
+     else
+          exports['qb-target']:AddBoxZone(
+               zone_name,
+               npc_data.coords,
+               box.l,
+               box.w,
+               {
+                    name = zone_name,
+                    heading = box.heading,
+                    debugPoly = false,
+                    minZ = npc_data.coords.z + box.minz_offset,
+                    maxZ = npc_data.coords.z + box.maxz_offset,
+               },
+               {
+                    options = options,
+                    distance = 2.0,
+               }
+          )
+     end
 end
 
 local function remove_npc_zone(npc_id)
-     local zone_name = "npc_zone_" .. npc_id
-     if exports['qb-target'] then
-          exports['qb-target']:RemoveZone(zone_name)
-     end
+     if exports['qb-target'] then exports['qb-target']:RemoveZone("npc_zone_" .. npc_id) end
 end
 
 local function to_vec3(vec)
@@ -171,7 +192,7 @@ local function update_npc_spawns()
      end
 end
 
-Citizen.CreateThread(function()
+CreateThread(function()
      local function getValidValue(value, expectedType, defaultValue)
           return type(value) == expectedType and value or defaultValue
      end

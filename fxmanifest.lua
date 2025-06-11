@@ -7,6 +7,7 @@ description 'keep-paycheck'
 url "https://github.com/swkeep/keep-paycheck"
 
 shared_scripts {
+     -- "@ox_lib/init.lua",
      'locale/locale.lua',
      'locale/en.lua',
      'shared.config.lua',
