@@ -177,21 +177,21 @@ local function landing_menu(data)
                {
                     title = Lang:t('menu.withdraw_menu.withdraw_all'),
                     icon = 'fa-solid fa-money-bill-transfer',
-                    event = function()
+                    onSelect = function()
                          withdraw_all(data.money)
                     end
                },
                {
                     title = Lang:t('menu.withdraw_menu.withdraw_amount'),
                     icon = 'fa-solid fa-arrow-up-wide-short',
-                    event = function()
+                    onSelect = function()
                          withdraw_amount(data.money)
                     end
                },
                {
                     title = Lang:t('menu.withdraw_menu.transaction_history'),
                     icon = 'fa-solid fa-clock-rotate-left',
-                    event = function()
+                    onSelect = function()
                          TriggerServerEvent("keep-paycheck:server:get_logs")
                     end
                }

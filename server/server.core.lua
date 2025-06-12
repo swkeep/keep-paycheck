@@ -72,7 +72,7 @@ local function withdraw_funds(player, identifier, account_data, amount)
             type = 'to',
             source = {
                 identifier = identifier,
-                name = player.PlayerData.charinfo.firstname .. ' ' .. player.PlayerData.charinfo.lastname
+                name = GetCharacterName(player)
             }
         },
         account = {
@@ -222,48 +222,38 @@ local function remove_society_money_qbcore(job_name, amount)
     end
 end
 
-local function get_esx_paycheck_data(xPlayer)
-    if framework ~= 'esx' then return nil end
-
-    return {
-        should_pay = xPlayer.job.grade_salary > 0,
-        amount = xPlayer.job.grade_salary,
-        job_name = xPlayer.job.name,
-        society_payment = Config.EnableSocietyPayouts,
-        source = xPlayer.source,
-        identifier = xPlayer.identifier
-    }
-end
-
 local function handle_paycheck(identifier, amount, job_name, src, society_payment)
     if society_payment then
         local society_balance = 0
 
         if framework == 'qbcore' then
             society_balance = get_society_money_qbcore(job_name)
-        elseif framework == 'esx' then
-            -- -- ESX requires async handling
-            -- get_society_money_esx(job_name, function(balance)
-            --     society_balance = balance
-            --     if society_balance >= amount then
-            --         addmoney_to_paycheck(identifier, amount, job_name)
-            --         remove_society_money_esx(job_name, amount)
-            --         ShowNotification(source, ('Received paycheck: $%s'):format(amount))
-            --     else
-            --         ShowNotification(source, 'Company is too poor to pay you', 'error')
-            --     end
-            -- end)
-            return
-        end
 
-        if society_balance >= amount then
-            addmoney_to_paycheck(identifier, amount, job_name)
-            if framework == 'qbcore' then
-                remove_society_money_qbcore(job_name, amount)
+            if society_balance >= amount then
+                addmoney_to_paycheck(identifier, amount, job_name)
+                if framework == 'qbcore' then
+                    remove_society_money_qbcore(job_name, amount)
+                end
+                ShowNotification(src, ('Received paycheck: $%s'):format(amount))
+            else
+                ShowNotification(src, 'Company is too poor to pay you', 'error')
             end
-            ShowNotification(src, ('Received paycheck: $%s'):format(amount))
-        else
-            ShowNotification(src, 'Company is too poor to pay you', 'error')
+        elseif framework == 'esx' then
+            TriggerEvent("esx_society:getSociety", job_name, function(society)
+                if society ~= nil then -- verified society
+                    TriggerEvent("esx_addonaccount:getSharedAccount", society.account, function(account)
+                        if account.money >= amount then
+                            addmoney_to_paycheck(identifier, amount, job_name)
+                            account.removeMoney(amount)
+                            ShowNotification(source, ('Received paycheck: $%s'):format(amount))
+                        else
+                            ShowNotification(source, 'Company is too poor to pay you', 'error')
+                        end
+                    end)
+                else
+                    addmoney_to_paycheck(identifier, amount, job_name)
+                end
+            end)
         end
     else
         addmoney_to_paycheck(identifier, amount, job_name)
@@ -276,14 +266,14 @@ local function qbcore_paycheck(players, jobs, pay_check_society)
 
     for _, Player in pairs(players) do
         if Player then
-            local paycheckData = get_qbcore_paycheck_data(Player, jobs, pay_check_society)
-            if paycheckData and paycheckData.should_pay then
+            local paycheck_data = get_qbcore_paycheck_data(Player, jobs, pay_check_society)
+            if paycheck_data and paycheck_data.should_pay then
                 handle_paycheck(
-                    paycheckData.identifier,
-                    paycheckData.amount,
-                    paycheckData.job_name,
-                    paycheckData.source,
-                    paycheckData.society_payment
+                    paycheck_data.identifier,
+                    paycheck_data.amount,
+                    paycheck_data.job_name,
+                    paycheck_data.source,
+                    paycheck_data.society_payment
                 )
             end
         end
@@ -291,3 +281,45 @@ local function qbcore_paycheck(players, jobs, pay_check_society)
 end
 
 exports('QbcorePaycheckHandler', qbcore_paycheck)
+
+local function get_esx_paycheck_data(xPlayer, pay_check_society, Offduty_multiplier)
+    if framework ~= 'es_extended' then return nil end
+    local job = xPlayer.job
+    local job_name = job.name
+    local grade_salary = job.grade_salary
+    local is_unemployed = job_name == "unemployed"
+    local amount = grade_salary
+
+    if not is_unemployed and not job.onDuty then
+        amount = math.floor(grade_salary * Offduty_multiplier)
+    end
+
+    return {
+        should_pay = xPlayer.paycheckEnabled and amount > 0,
+        amount = amount,
+        job_name = job_name,
+        society_payment = not is_unemployed and pay_check_society,
+        source = xPlayer.source,
+        identifier = xPlayer.identifier,
+        is_unemployed = is_unemployed
+    }
+end
+
+local function ESX_paycheck(players, pay_check_society, Offduty_multiplier)
+    if not next(players) then return end
+
+    for _, xPlayer in pairs(players) do
+        local paycheck_data = get_esx_paycheck_data(xPlayer, pay_check_society, Offduty_multiplier)
+        if paycheck_data and paycheck_data.should_pay then
+            handle_paycheck(
+                paycheck_data.identifier,
+                paycheck_data.amount,
+                paycheck_data.job_name,
+                paycheck_data.source,
+                paycheck_data.society_payment
+            )
+        end
+    end
+end
+
+exports('ESXPaycheckHandler', ESX_paycheck)
