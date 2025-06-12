@@ -1,27 +1,27 @@
 fx_version 'cerulean'
 games { 'gta5' }
+lua54 'yes'
 
-author "Swkeep#7049"
+author "Swkeep"
+description 'keep-paycheck'
+url "https://github.com/swkeep/keep-paycheck"
 
 shared_scripts {
-     '@qb-core/shared/locale.lua',
+     -- "@ox_lib/init.lua",
+     'locale/locale.lua',
      'locale/en.lua',
-     'config.lua',
-     'shared/shared.lua'
+     'shared.config.lua',
 }
 
 client_scripts {
-     'client/lib.lua',
-     'client/target/target.lua',
-     'client/client_main.lua',
-     'client/menu/menu.lua',
+     'client/target.lua',
+     'client/client.bridge.lua',
+     'client/client.core.lua',
 }
 
 server_script {
      '@oxmysql/lib/MySQL.lua',
-     'server/server_main.lua',
+     'server/server.db.lua',
+     'server/server.bridge.lua',
+     'server/server.core.lua',
 }
-
--- dependency 'oxmysql'
-
-lua54 'yes'
